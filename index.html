@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mood Diary 💕</title>
+<style>
+body {
+    font-family: 'Comic Sans MS', sans-serif;
+    background: linear-gradient(to right, #ffe6f0, #ffb3d9);
+    margin: 0;
+    padding: 0;
+}
+
+nav {
+    background-color: rgba(255, 105, 180, 0.9);
+    padding: 12px 0;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+nav a {
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+    margin: 5px 15px;
+    padding: 8px 15px;
+    border-radius: 15px;
+    transition: 0.3s;
+}
+
+nav a:hover {
+    background-color: rgba(255, 182, 193, 0.7);
+}
+
+.container {
+    margin: 30px auto;
+    background-color: rgba(255,255,255,0.95);
+    padding: 30px 40px;
+    border-radius: 20px;
+    max-width: 700px;
+    text-align: center;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}
+
+h2 {
+    margin-bottom: 20px;
+}
+
+form select, form textarea, form input[type="submit"] {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 15px;
+    border-radius: 10px;
+    border: 1px solid #ffb3d9;
+    box-sizing: border-box;
+    font-size: 16px;
+}
+
+form textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+form input[type="submit"] {
+    background-color: #f08080;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.3s;
+}
+
+form input[type="submit"]:hover {
+    background-color: #e06b6b;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+th, td {
+    border: 1px solid #ffb3d9;
+    padding: 10px;
+    text-align: center;
+}
+
+th {
+    background-color: #ff99cc;
+    color: white;
+}
+
+tr:nth-child(even) { background-color: #ffe6f2; }
+
+@media (max-width: 600px) {
+    nav {
+        flex-direction: column;
+    }
+    .container {
+        padding: 20px;
+        margin: 15px;
+    }
+}
+</style>
+</head>
+<body>
+
+<nav>
+    <a href="#form">กรอกข้อมูล</a>
+    <a href="#history_daily">ย้อนหลังรายวัน</a>
+    <a href="#history_weekly">ย้อนหลังรายสัปดาห์</a>
+</nav>
+
+<div class="container" id="form">
+    <h2>วันนี้รู้สึกอย่างไร 💕</h2>
+    <form id="moodForm">
+        <select name="mood" id="mood" required>
+            <option value="happy">มีความสุข 😊</option>
+            <option value="sad">เศร้า 😢</option>
+            <option value="angry">โกรธ 😠</option>
+            <option value="excited">ตื่นเต้น 😍</option>
+        </select>
+        <textarea name="detail" id="detail" placeholder="กรุณากรอกรายละเอียด" required></textarea>
+        <input type="submit" value="ส่งข้อมูล 💖">
+    </form>
+</div>
+
+<div class="container" id="history_daily">
+    <h2>ข้อมูลย้อนหลังรายวัน 📊</h2>
+    <table id="dailyTable">
+        <tr>
+            <th>วันที่</th>
+            <th>อารมณ์</th>
+            <th>รายละเอียด</th>
+        </tr>
+    </table>
+</div>
+
+<div class="container" id="history_weekly">
+    <h2>ข้อมูลย้อนหลังรายสัปดาห์ 📊</h2>
+    <table id="weeklyTable">
+        <tr>
+            <th>สัปดาห์</th>
+            <th>รายละเอียดอารมณ์</th>
+        </tr>
+    </table>
+</div>
+
+<script>
+const form = document.getElementById('moodForm');
+
+form.addEventListener('submit', function(e){
+    e.preventDefault();
+    const mood = document.getElementById('mood').value;
+    const detail = document.getElementById('detail').value.trim();
+    const today = new Date();
+    const entry = { date: today.toISOString(), mood, detail };
+
+    let logs = JSON.parse(localStorage.getItem('moodLogs') || '[]');
+    logs.push(entry);
+    localStorage.setItem('moodLogs', JSON.stringify(logs));
+    form.reset();
+    alert('บันทึกสำเร็จ 💖');
+    renderTables();
+});
+
+function renderTables(){
+    const logs = JSON.parse(localStorage.getItem('moodLogs') || '[]');
+    const dailyTable = document.getElementById('dailyTable');
+    const weeklyTable = document.getElementById('weeklyTable');
+
+    // daily
+    dailyTable.innerHTML = '<tr><th>วันที่</th><th>อารมณ์</th><th>รายละเอียด</th></tr>';
+    logs.slice().reverse().forEach(entry => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${new Date(entry.date).toLocaleString()}</td><td>${moodEmoji(entry.mood)}</td><td>${entry.detail}</td>`;
+        dailyTable.appendChild(tr);
+    });
+
+    // weekly
+    const weeks = {};
+    logs.forEach(entry => {
+        const d = new Date(entry.date);
+        const year = d.getFullYear();
+        const week = getWeekNumber(d);
+        const key = year + '-W' + week;
+        if(!weeks[key]) weeks[key] = [];
+        weeks[key].push(`${moodEmoji(entry.mood)}: ${entry.detail}`);
+    });
+    weeklyTable.innerHTML = '<tr><th>สัปดาห์</th><th>รายละเอียดอารมณ์</th></tr>';
+    Object.keys(weeks).sort().reverse().forEach(week => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${week}</td><td>${weeks[week].join('<br>')}</td>`;
+        weeklyTable.appendChild(tr);
+    });
+}
+
+function getWeekNumber(d) {
+    d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7));
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+    const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1)/7);
+    return weekNo;
+}
+
+function moodEmoji(mood){
+    switch(mood){
+        case 'happy': return '😊';
+        case 'sad': return '😢';
+        case 'angry': return '😠';
+        case 'excited': return '😍';
+        default: return mood;
+    }
+}
+
+renderTables();
+</script>
+
+</body>
+</html>

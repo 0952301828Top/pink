@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>Dashboard</title>
+<style>
+body { font-family: Arial, sans-serif; margin: 20px; }
+table { border-collapse: collapse; width: 100%; }
+th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+th { background-color: #f08080; color: white; }
+a { text-decoration: none; color: blue; }
+a:hover { color: darkred; }
+</style>
+</head>
+<body>
+<h1>Dashboard</h1>
+<p id="greeting"></p>
+
+<h2>รายชื่อผู้ใช้ทั้งหมด</h2>
+<table id="userTable">
+<tr>
+    <th>ID</th>
+    <th>Username</th>
+    <th>Name</th>
+    <th>Email</th>
+    <th>Admin</th>
+    <th>Action</th>
+</tr>
+</table>
+
+<script>
+// ตัวอย่างข้อมูลผู้ใช้
+const users = [
+    {user_id:1, username:'user1', name:'User One', email:'u1@mail.com', is_admin:false},
+    {user_id:2, username:'admin', name:'Admin', email:'admin@mail.com', is_admin:true},
+];
+
+// ดึงผู้ใช้ที่ login จาก localStorage
+const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+
+if(!currentUser){
+    alert("กรุณา login ก่อน!");
+    window.location.href = "login.html";
+}
+
+// แสดง greeting
+document.getElementById('greeting').textContent = `สวัสดี, ${currentUser.name} (${currentUser.is_admin ? 'Admin' : 'User'})`;
+
+// แสดงตาราง
+const table = document.getElementById('userTable');
+users.forEach(u => {
+    const row = table.insertRow();
+    row.insertCell(0).textContent = u.user_id;
+    row.insertCell(1).textContent = u.username;
+    row.insertCell(2).textContent = u.name;
+    row.insertCell(3).textContent = u.email;
+    row.insertCell(4).textContent = u.is_admin ? 'Yes' : 'No';
+    const actionCell = row.insertCell(5);
+    if(currentUser.is_admin){
+        actionCell.innerHTML = `<a href="#">Edit</a> | <a href="#" onclick="alert('Delete ${u.username}')">Delete</a>`;
+    } else {
+        actionCell.textContent = '-';
+    }
+});
+</script>
+</body>
+</html>
